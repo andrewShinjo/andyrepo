@@ -1,27 +1,18 @@
 [org 0x7c00]
 
-mov ah, 0x0e
+mov si, message
 
-mov al, 'A'
-int 0x10
+print_char:
+  lodsb
+  cmp al, 0
+  je done
+  mov ah, 0x0e
+  int 0x10
+  jmp print_char
+done:
+  cli
+  jmp $
 
-mov al, 'n'
-int 0x10
-
-mov al, 'd'
-int 0x10
-
-mov al, 'y'
-int 0x10
-
-mov al, 'O'
-int 0x10
-
-mov al, 'S'
-int 0x10
-
-jmp $
-
+message db 'AndyOS', 0
 times 510 - ($ - $$) db 0
-
 dw 0xaa55
