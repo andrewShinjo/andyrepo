@@ -1,17 +1,5 @@
 #import <Cocoa/Cocoa.h>
 
-@interface AppDelegate : NSObject <NSApplicationDelegate>
-@property (strong) NSWindow *window;
-@end
-
-@implementation AppDelegate
-
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-
-}
-
-@end
-
 int main(int argc, const char *argv[]) {
   @autoreleasepool {
     NSLog(@"Mysticbook [cocoa]");
