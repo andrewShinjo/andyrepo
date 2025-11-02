@@ -1,0 +1,6 @@
+binary:
+  name: "builder",
+  srcs: [
+    "main.cpp"
+  ]
+  deps:[],
