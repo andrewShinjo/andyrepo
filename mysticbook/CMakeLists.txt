@@ -3,7 +3,7 @@ project(Mysticbook)
 
 add_executable(
   ${PROJECT_NAME}
-  cocoa_main.m
+  cocoa_main.mm
 )
 
 target_link_libraries(
