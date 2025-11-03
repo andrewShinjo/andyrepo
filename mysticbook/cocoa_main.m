@@ -1,25 +1,20 @@
+#include "CocoaAppBuilder.h"
+#import "CocoaWindowBuilder.h"
 #import <Cocoa/Cocoa.h>
 
 int main(int argc, const char *argv[]) {
   @autoreleasepool {
     NSLog(@"Mysticbook [cocoa]");
 
-    NSApplication *app = [NSApplication sharedApplication];
+    NSApplication *app = [[[CocoaAppBuilder alloc] init] build];
 
-    NSWindow *window = [
-      [NSWindow alloc]
-      initWithContentRect:NSMakeRect(0, 0, 800, 600)
-      styleMask:NSWindowStyleMaskTitled |
-        NSWindowStyleMaskClosable |
-        NSWindowStyleMaskResizable
-      backing:NSBackingStoreBuffered
-      defer:NO
-    ];
+    NSWindow *window =[[[[[
+      CocoaWindowBuilder alloc] 
+      init] 
+      withFrame:NSMakeRect(0,0,800,600)]
+      withTitle:@"Mysticbook [cocoa]"]
+      build];
 
-    [window setTitle:@"Mysticbook [cocoa]"];
-
-    [app setActivationPolicy:NSApplicationActivationPolicyRegular];
-    [app activateIgnoringOtherApps:YES];
     [window makeKeyAndOrderFront:nil];
     [app run];
   }
