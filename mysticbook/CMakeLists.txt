@@ -11,4 +11,5 @@ target_link_libraries(
   "-framework Cocoa" 
   "-framework Metal" 
   "-framework QuartzCore"
+  CocoaWrapper
 )

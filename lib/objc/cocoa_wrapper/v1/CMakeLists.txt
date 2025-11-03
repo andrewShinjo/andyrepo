@@ -4,9 +4,12 @@ project(CocoaWrapper LANGUAGES OBJC)
 add_library(
   ${PROJECT_NAME}
   STATIC
+  src/CocoaAppBuilder.m
   src/CocoaWindowBuilder.m
 )
 
-target_include_directories(MyLibrary PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+target_include_directories(
+  ${PROJECT_NAME} 
+  PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
 )

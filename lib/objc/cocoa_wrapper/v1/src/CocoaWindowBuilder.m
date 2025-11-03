@@ -2,7 +2,15 @@
 
 @implementation CocoaWindowBuilder {
   NSRect _frame;
+  NSString *_title;
   NSWindowStyleMask _windowStyleMask;
+}
+
+- (instancetype)init {
+  self = [super init];
+  _windowStyleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | 
+    NSWindowStyleMaskResizable;
+  return self;
 }
 
 - (CocoaWindowBuilder *)withFrame:(NSRect)frame {
@@ -10,27 +18,21 @@
   return self;
 }
 
-- (CocoaWindowBuilder *)withStyleClosable {
-  _windowStyleMask |= NSWindowStyleMaskClosable;
-  return self;
-}
-
-- (CocoaWindowBuilder *)withStyleResizable {
-  _windowStyleMask |= NSWindowStyleMaskResizable;
-  return self;
-}
-
-- (CocoaWindowBuilder *)withStyleTitled {
-  _windowStyleMask |= NSWindowStyleMaskTitled;
+- (CocoaWindowBuilder *)withTitle:(NSString *)title {
+  _title = title;
   return self;
 }
 
 - (NSWindow *)build {
   NSWindow *window =
-      [[NSWindow alloc] initWithContentRect:_frame
-                                  styleMask:_windowStyleMask
-                                    backing:NSBackingStoreBuffered
-                                      defer:NO];
+      [
+        [NSWindow alloc] 
+        initWithContentRect:_frame
+        styleMask:_windowStyleMask
+        backing:NSBackingStoreBuffered
+        defer:NO
+      ];
+  [window setTitle:_title];             
   return window;
 }
 

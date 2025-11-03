@@ -6,12 +6,7 @@
 @interface CocoaWindowBuilder : NSObject
 
 - (CocoaWindowBuilder *)withFrame:(NSRect)frame;
-
-// Style mask
-- (CocoaWindowBuilder *)withStyleClosable;
-- (CocoaWindowBuilder *)withStyleResizable;
-- (CocoaWindowBuilder *)withStyleTitled;
-
+- (CocoaWindowBuilder *)withTitle:(NSString *)title;
 - (NSWindow *)build;
 
 @end
