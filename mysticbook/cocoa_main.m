@@ -1,9 +1,69 @@
 #import <Cocoa/Cocoa.h>
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
+#import <MetalKit/MetalKit.h>
+#import <CoreText/CoreText.h>
 
-#include "CocoaAppBuilder.h"
+#import "CocoaAppBuilder.h"
 #import "CocoaWindowBuilder.h"
+
+CGImageRef createTextImage(NSString *text, CGSize size, CGFloat scale) {
+    NSDictionary *attrs = @{
+        NSFontAttributeName: [NSFont systemFontOfSize:32],
+        NSForegroundColorAttributeName: NSColor.whiteColor
+    };
+    NSAttributedString *attrStr = [[NSAttributedString alloc] initWithString:text attributes:attrs];
+
+    CGContextRef context = CGBitmapContextCreate(NULL,
+        size.width * scale, size.height * scale,
+        8, 0,
+        CGColorSpaceCreateDeviceRGB(),
+        kCGImageAlphaPremultipliedLast);
+    CGContextScaleCTM(context, scale, scale);
+    CGContextSetFillColorWithColor(context, NSColor.clearColor.CGColor);
+    CGContextFillRect(context, CGRectMake(0, 0, size.width, size.height));
+
+    CTFramesetterRef framesetter = CTFramesetterCreateWithAttributedString((CFAttributedStringRef)attrStr);
+    CGPathRef path = CGPathCreateWithRect(CGRectMake(0, 0, size.width, size.height), NULL);
+    CTFrameRef frame = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, attrStr.length), path, NULL);
+    CTFrameDraw(frame, context);
+
+    CGImageRef image = CGBitmapContextCreateImage(context);
+    CFRelease(frame); CFRelease(path); CFRelease(framesetter); CGContextRelease(context);
+    return image;
+}
+
+id<MTLTexture> createTextureFromImage(id<MTLDevice> device, CGImageRef image) {
+    MTKTextureLoader *loader = [[MTKTextureLoader alloc] initWithDevice:device];
+    NSError *error = nil;
+    return [loader newTextureWithCGImage:image options:@{ MTKTextureLoaderOptionSRGB : @NO } error:&error];
+}
+
+void drawTextToMetal(CAMetalLayer *metalLayer, NSString *text) {
+    id<MTLDevice> device = metalLayer.device;
+    id<MTLCommandQueue> commandQueue = [device newCommandQueue];
+    id<CAMetalDrawable> drawable = [metalLayer nextDrawable];
+    if (!drawable) return;
+
+    CGSize textSize = CGSizeMake(512, 128);
+    CGFloat scale = [NSScreen mainScreen].backingScaleFactor;
+    CGImageRef textImage = createTextImage(text, textSize, scale);
+    id<MTLTexture> textTexture = createTextureFromImage(device, textImage);
+    CGImageRelease(textImage);
+
+    id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+    id<MTLBlitCommandEncoder> blit = [commandBuffer blitCommandEncoder];
+    [blit copyFromTexture:textTexture
+              sourceSlice:0 sourceLevel:0
+             sourceOrigin:MTLOriginMake(0, 0, 0)
+               sourceSize:MTLSizeMake(textTexture.width, textTexture.height, 1)
+                toTexture:drawable.texture
+         destinationSlice:0 destinationLevel:0
+        destinationOrigin:MTLOriginMake(0, 0, 0)];
+    [blit endEncoding];
+    [commandBuffer presentDrawable:drawable];
+    [commandBuffer commit];
+}
 
 int main(int argc, const char *argv[]) {
   @autoreleasepool {
@@ -29,28 +89,7 @@ int main(int argc, const char *argv[]) {
     metalLayer.contentsScale = [NSScreen mainScreen].backingScaleFactor;
     [contentView.layer addSublayer:metalLayer];
 
-    // Draw something in metal.
-    id<MTLDevice> device = metalLayer.device;
-    id<MTLCommandQueue> commandQueue = [device newCommandQueue];
-    id<CAMetalDrawable> drawable = [metalLayer nextDrawable];
-
-    if(drawable) {
-      MTLRenderPassDescriptor *renderPassDescriptor 
-        = [MTLRenderPassDescriptor renderPassDescriptor];
-      renderPassDescriptor.colorAttachments[0].texture = drawable.texture;
-      renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-      renderPassDescriptor.colorAttachments[0].clearColor 
-        = MTLClearColorMake(0.2, 0.4, 0.6, 1.0);
-      
-      id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
-      id<MTLRenderCommandEncoder> renderCommandEncoder = [
-        commandBuffer 
-        renderCommandEncoderWithDescriptor:renderPassDescriptor
-      ];
-      [renderCommandEncoder endEncoding];
-      [commandBuffer presentDrawable:drawable];
-      [commandBuffer commit];
-    }
+    drawTextToMetal(metalLayer, @"Hello CoreText in Metal!");
 
     [window makeKeyAndOrderFront:nil];
     [app run];
