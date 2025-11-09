@@ -1,13 +1,12 @@
 #import "BlockEditor.h"
 
+#define KEY_LEFT_ARROW 123
+#define KEY_RIGHT_ARROW 124
+
 @implementation BlockEditor
 
 - (bool)isHeading:(NSString *)line {
   return [line hasPrefix:@"• "];
-}
-
-- (void)resetStyling:(NSTextStorage *)storage {
-  [storage setAttributes:@{} range:NSMakeRange(0, storage.string.length)];
 }
 
 - (void)didChangeText {
@@ -46,6 +45,38 @@
     }
   }
   [storage endEditing];
+}
+
+// Event listener
+
+- (void)keyDown:(NSEvent *)event {
+  switch ([event keyCode]) {
+    case KEY_LEFT_ARROW: {
+      NSUInteger cursorIndex = self.selectedRange.location;
+      NSString *text = self.string;
+
+      if (cursorIndex == 0 || cursorIndex > text.length) {
+        [super keyDown:event];
+        return;
+      }
+
+      NSRange lineRange =
+          [text lineRangeForRange:NSMakeRange(cursorIndex - 1, 0)];
+      NSString *line = [text substringWithRange:lineRange];
+
+      if ([self isHeading:line]) {
+        NSUInteger indexInLine = cursorIndex - lineRange.location;
+
+        if (indexInLine <= 2) {
+          return;
+        }
+      }
+    }
+    default: {
+      break;
+    }
+  }
+  [super keyDown:event];
 }
 
 - (void)mouseDown:(NSEvent *)event {
