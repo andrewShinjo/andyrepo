@@ -4,6 +4,7 @@ project(Mysticbook)
 add_executable(
   ${PROJECT_NAME}
   cocoa_main.m
+  BlockEditor.m
 )
 
 target_link_libraries(

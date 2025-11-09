@@ -2,7 +2,8 @@
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
 
-#include "CocoaAppBuilder.h"
+#import "BlockEditor.h"
+#import "CocoaAppBuilder.h"
 #import "CocoaWindowBuilder.h"
 
 int main(int argc, const char *argv[]) {
@@ -21,36 +22,22 @@ int main(int argc, const char *argv[]) {
     NSView *contentView = window.contentView;
     contentView.wantsLayer = true;
 
-    // Setup metal.
-    CAMetalLayer *metalLayer = [CAMetalLayer layer];
-    metalLayer.device = MTLCreateSystemDefaultDevice();
-    metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-    metalLayer.frame = contentView.bounds;
-    metalLayer.contentsScale = [NSScreen mainScreen].backingScaleFactor;
-    [contentView.layer addSublayer:metalLayer];
+    // Add a scroll view.
+    NSScrollView *scrollView = 
+      [[NSScrollView alloc] initWithFrame:[[window contentView] bounds]];
+    [scrollView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+    [scrollView setHasVerticalScroller:YES];
 
-    // Draw something in metal.
-    id<MTLDevice> device = metalLayer.device;
-    id<MTLCommandQueue> commandQueue = [device newCommandQueue];
-    id<CAMetalDrawable> drawable = [metalLayer nextDrawable];
+    // Add a text view.
+    BlockEditor *blockEditor = 
+      [[BlockEditor alloc] initWithFrame:[[scrollView contentView] bounds]];
+    [blockEditor setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+    [blockEditor setEditable:YES];
+    [blockEditor setRichText:YES];
 
-    if(drawable) {
-      MTLRenderPassDescriptor *renderPassDescriptor 
-        = [MTLRenderPassDescriptor renderPassDescriptor];
-      renderPassDescriptor.colorAttachments[0].texture = drawable.texture;
-      renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-      renderPassDescriptor.colorAttachments[0].clearColor 
-        = MTLClearColorMake(0.2, 0.4, 0.6, 1.0);
-      
-      id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
-      id<MTLRenderCommandEncoder> renderCommandEncoder = [
-        commandBuffer 
-        renderCommandEncoderWithDescriptor:renderPassDescriptor
-      ];
-      [renderCommandEncoder endEncoding];
-      [commandBuffer presentDrawable:drawable];
-      [commandBuffer commit];
-    }
+    // Add text view to window.
+    [scrollView setDocumentView:blockEditor];
+    [[window contentView] addSubview:scrollView];
 
     [window makeKeyAndOrderFront:nil];
     [app run];
