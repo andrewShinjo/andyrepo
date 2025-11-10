@@ -5,6 +5,9 @@
 #import <Cocoa/Cocoa.h>
 
 @interface BlockEditor : NSTextView
+
+@property (nonatomic) CGFloat currentFontSize;
+
 @end
 
 #endif

@@ -1,18 +1,61 @@
 #import "BlockEditor.h"
 
+#define DEFAULT_FONT_SIZE 24
+
 #define KEY_LEFT_ARROW 123
 #define KEY_RIGHT_ARROW 124
 
 @implementation BlockEditor
 
-- (bool)isHeading:(NSString *)line {
-  return [line hasPrefix:@"• "];
+// Private
+
+- (void)updateTypingAttributes {
+  self.typingAttributes = @{
+    NSFontAttributeName : [NSFont systemFontOfSize:self.currentFontSize],
+  };
+}
+
+// Override
+
+- (instancetype)initWithFrame:(NSRect)frameRect {
+  self = [super initWithFrame:frameRect];
+  self.currentFontSize = DEFAULT_FONT_SIZE;
+  [self updateTypingAttributes];
+  return self;
 }
 
 - (void)didChangeText {
   [super didChangeText];
-  [self applyHeadingStyles];
+
+  NSTextStorage *textStorage = self.textStorage;
+  NSUInteger cursorIndex = self.selectedRange.location;
+  NSString *text = self.string;
+  NSRange lineRange = [text lineRangeForRange:NSMakeRange(cursorIndex, 0)];
+  NSString *currentLine = [text substringWithRange:lineRange];
+
+  NSLog(@"Current line: %@", currentLine);
+
+  [textStorage beginEditing];
+
+  if ([currentLine hasPrefix:@"* "]) {
+
+    // Change line to start with "• "
+    NSString *bulletLine =
+        [@"• " stringByAppendingString:[currentLine substringFromIndex:2]];
+    [textStorage replaceCharactersInRange:lineRange withString:bulletLine];
+    NSString *updatedLine = [text substringWithRange:lineRange];
+    NSLog(@"Updated line: %@", updatedLine);
+  }
+
+  [textStorage endEditing];
 }
+
+/*
+
+- (bool)isHeading:(NSString *)line {
+  return [line hasPrefix:@"• "];
+}
+
 
 - (void)applyHeadingStyles {
   NSTextStorage *storage = self.textStorage;
@@ -48,6 +91,13 @@
 }
 
 // Event listener
+
+- (void)insertNewline:(id)sender {
+  [super insertNewline:sender];
+  self.typingAttributes = @{
+    NSFontAttributeName : [NSFont systemFontOfSize:DEFAULT_FONT_SIZE],
+  };
+}
 
 - (void)keyDown:(NSEvent *)event {
   switch ([event keyCode]) {
@@ -101,5 +151,7 @@
 
   [super mouseDown:event];
 }
+
+*/
 
 @end
