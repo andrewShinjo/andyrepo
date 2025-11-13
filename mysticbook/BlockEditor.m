@@ -14,6 +14,7 @@
 
   self.typingAttributes = @{
     NSFontAttributeName : [NSFont systemFontOfSize:24],
+    NSForegroundColorAttributeName : [NSColor whiteColor]
   };
 
   NSString *bullet = @"• \n";
@@ -28,24 +29,37 @@
   return self;
 }
 
+- (void)insertNewline:(id)sender {
+  [super insertNewline:sender];
+
+  NSRange cursorRange = self.selectedRange;
+  NSString *text = self.string;
+  NSRange lineRange = [text lineRangeForRange:cursorRange];
+
+  // After inserting a new line, insert a bullet point.
+  [self insertText:@"• " replacementRange:NSMakeRange(lineRange.location, 0)];
+}
+
 - (void)mouseDown:(NSEvent *)event {
-  [super mouseDown:event];
 
   NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
   NSUInteger charIndex = [self characterIndexForInsertionAtPoint:point];
   NSRange lineRange =
       [[self string] lineRangeForRange:NSMakeRange(charIndex, 0)];
   NSString *lineText = [[self string] substringWithRange:lineRange];
+  NSString *trimmedText = [lineText
+      stringByTrimmingCharactersInSet:[NSCharacterSet
+                                          whitespaceAndNewlineCharacterSet]];
 
-  NSLog(@"charIndex = %lu", (unsigned long)charIndex);
-  NSLog(@"Line text: %@", lineText);
-
-  if ([lineText length] == 0) {
+  // When I press an empty line, insert a bullet point.
+  if ([trimmedText length] == 0) {
     [self insertText:@"• \n"
         replacementRange:NSMakeRange(lineRange.location, 0)];
 
     NSUInteger bulletCursorIndex = lineRange.location + 2;
     [self setSelectedRange:NSMakeRange(bulletCursorIndex, 0)];
+  } else {
+    [super mouseDown:event];
   }
 }
 
