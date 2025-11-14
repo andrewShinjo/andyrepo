@@ -3,11 +3,6 @@
 
 @implementation BlockEditor
 
-// "• |"
-//
-
-// Private
-
 // Override
 
 - (void)deleteBackward:(id)sender {
@@ -40,12 +35,21 @@
   }
 }
 
+- (void)drawRect:(NSRect)dirtyRect {
+  [super drawRect:dirtyRect];
+}
+
 - (instancetype)initWithFrame:(NSRect)frameRect {
   self = [super initWithFrame:frameRect];
 
+  NSMutableParagraphStyle *style = [[NSMutableParagraphStyle alloc] init];
+  style.firstLineHeadIndent = 0.0;
+  style.headIndent = 20.0;
+
   self.typingAttributes = @{
     NSFontAttributeName : [NSFont systemFontOfSize:24],
-    NSForegroundColorAttributeName : [NSColor whiteColor]
+    NSForegroundColorAttributeName : [NSColor whiteColor],
+    NSParagraphStyleAttributeName : style,
   };
 
   NSString *bullet = @"• \n";
@@ -96,10 +100,13 @@
   // Get cursor index on the current line.
   NSUInteger lineOffset = charIndex - lineRange.location;
 
-  // Do nothing rule:
   if ([lineText hasPrefix:@"• "] && lineOffset == 2 &&
       keyChar == NSLeftArrowFunctionKey) {
-    return;
+    NSRange previousLineRange =
+        [text lineRangeForRange:NSMakeRange(lineRange.location - 1, 0)];
+    NSUInteger newLocation = NSMaxRange(previousLineRange);
+    NSRange newCursorRange = NSMakeRange(newLocation, 0);
+    [self setSelectedRange:newCursorRange];
   }
 
   [super keyDown:event];
